@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}BCD Maintenance Tracker{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>BCD Maintenance Tracker</h1>
+
+    {% if bcds %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3>Total BCDs</h3>
+                    <p style="font-size:2rem; font-weight:bold; color:#2c6fad">{{ bcds|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3>Maintenance Due</h3>
+                    <p style="font-size:2rem; font-weight:bold; color:{% if bcds|selectattr('maintenance_due', 'equalto', true)|list|length > 0 %}#ff3b30{% else %}#2c6fad{% endif %}">
+                        {{ bcds|selectattr('maintenance_due', 'equalto', true)|list|length }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">All BCDs</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Manufacturer</th>
+                            <th>Model</th>
+                            <th>Serial Number</th>
+                            <th>Last Maintenance</th>
+                            <th>Next Maintenance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bcd in bcds %}
+                        <tr {% if bcd.maintenance_due %}class="table-warning"{% endif %}>
+                            <td>{{ bcd.id }}</td>
+                            <td>{{ bcd.manufacturer }}</td>
+                            <td>{{ bcd.model }}</td>
+                            <td>{{ bcd.serial_number }}</td>
+                            <td>{{ bcd.last_maintenance_formatted }}</td>
+                            <td>{{ bcd.next_maintenance_formatted }}</td>
+                            <td>
+                                {% if bcd.maintenance_due %}
+                                    <span class="badge badge-danger">Maintenance Due</span>
+                                {% else %}
+                                    <span class="badge badge-success">Current</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('maintenance_detail', bcd_id=bcd.id) }}" class="btn btn-sm btn-info">Maintenance History</a>
+                                <a href="{{ url_for('item_detail', item_id=bcd.item_id) }}" class="btn btn-sm btn-secondary">Item Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <p class="lead">No BCDs found in inventory.</p>
+            <a href="{{ url_for('add_item') }}" class="btn btn-primary mt-3">Add Equipment</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

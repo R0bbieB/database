@@ -1,0 +1,87 @@
+<!-- Add this to the bottom of your layout.html, just before the </body> tag -->
+<!-- Simple Quick Maintenance Button -->
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+  <button class="btn btn-warning rounded-circle p-3 shadow"
+          data-toggle="modal"
+          data-target="#maintenanceModal"
+          style="width: 60px; height: 60px;">
+    <i class="fas fa-wrench"></i>
+  </button>
+</div>
+
+<!-- Make sure the maintenance modal is defined correctly -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1" role="dialog" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="maintenanceModalLabel">Add Maintenance Record</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="maintenanceForm" action="/quick-maintenance" method="POST">
+          <div class="form-group">
+            <label for="bcd_selection">Select BCD:</label>
+            <select class="form-control" id="bcd_selection" name="bcd_id" required>
+              <option value="">-- Select BCD --</option>
+              {% for bcd in global_bcds %}
+                <option value="{{ bcd.id }}">
+                  {{ bcd.manufacturer }} {{ bcd.model }} (SN: {{ bcd.serial_number }})
+                  {% if bcd.is_maintenance_due %} - MAINTENANCE DUE{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maintenance_date">Date:</label>
+            <input type="date" class="form-control" id="maintenance_date" name="date" value="{{ today }}" required>
+          </div>
+
+          <div class="form-group">
+            <label for="maintenance_type">Type:</label>
+            <select class="form-control" id="maintenance_type" name="type" required>
+              <option value="Regular maintenance">Regular Maintenance</option>
+              <option value="Repair">Repair</option>
+              <option value="Inspection">Inspection</option>
+              <option value="Part replacement">Part Replacement</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maintenance_notes">Notes:</label>
+            <textarea class="form-control" id="maintenance_notes" name="notes" rows="3" placeholder="Enter details about the maintenance performed..."></textarea>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="generate_report" name="generate_report" value="1">
+            <label class="form-check-label" for="generate_report">
+              Generate maintenance report after saving
+            </label>
+          </div>
+
+          <div class="form-group text-right">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Maintenance Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this script at the end to handle the form submission -->
+<script>
+  $(document).ready(function() {
+    // Prevent form submission if no BCD is selected
+    $('#maintenanceForm').on('submit', function(e) {
+      if (!$('#bcd_selection').val()) {
+        e.preventDefault();
+        alert('Please select a BCD');
+        return false;
+      }
+    });
+  });
+</script>

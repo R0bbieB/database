@@ -1,0 +1,167 @@
+{% extends "layout.html" %}
+
+{% block title %}Tank List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Tanks</h1>
+    <p>Total Tanks: {{ total_tanks }} | Maintenance Due: {{ maintenance_due }}</p>
+
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-due-tab" data-toggle="tab" href="#nav-due" role="tab" aria-controls="nav-due" aria-selected="true">
+                Maintenance Due ({{ tanks_by_status.due|length }})
+            </a>
+            <a class="nav-item nav-link" id="nav-upcoming-tab" data-toggle="tab" href="#nav-upcoming" role="tab" aria-controls="nav-upcoming" aria-selected="false">
+                Upcoming Maintenance ({{ tanks_by_status.upcoming|length }})
+            </a>
+            <a class="nav-item nav-link" id="nav-current-tab" data-toggle="tab" href="#nav-current" role="tab" aria-controls="nav-current" aria-selected="false">
+                Current ({{ tanks_by_status.current|length }})
+            </a>
+        </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+        <!-- Maintenance Due Tanks -->
+        <div class="tab-pane fade show active" id="nav-due" role="tabpanel" aria-labelledby="nav-due-tab">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tank ID</th>
+                            <th>Manufacturer</th>
+                            <th>Gas Type</th>
+                            <th>Hydro Date</th>
+                            <th>VIP Date</th>
+                            <th>Tank Material</th>
+                            <th>Working Pressure</th>
+                            <th>Next Maintenance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tank in tanks_by_status.due %}
+                        <tr class="table-danger">
+                            <td>{{ tank.Serial_Number }}</td>
+                            <td>{{ tank.Manufacturer }}</td>
+                            <td>{{ tank.Gas_Type }}</td>
+                            <td>{{ tank.Hydro_Date_Formatted }}</td>
+                            <td>{{ tank.VIP_Date_Formatted }}</td>
+                            <td>{{ tank.Tank_Material }}</td>
+                            <td>{{ tank.Working_Pressure }} psi</td>
+                            <td>
+                                <strong>{{ tank.next_maintenance_type }}</strong> due<br>
+                                {{ tank.next_maintenance_date_Formatted }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('tank_detail', tank_id=tank.id) }}" class="btn btn-sm btn-info">Details</a>
+                                <a href="{{ url_for('item_detail', item_id=tank.inventory_id) }}" class="btn btn-sm btn-secondary">Inventory</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No tanks due for maintenance</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Upcoming Maintenance Tanks -->
+        <div class="tab-pane fade" id="nav-upcoming" role="tabpanel" aria-labelledby="nav-upcoming-tab">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tank ID</th>
+                            <th>Manufacturer</th>
+                            <th>Gas Type</th>
+                            <th>Hydro Date</th>
+                            <th>VIP Date</th>
+                            <th>Tank Material</th>
+                            <th>Working Pressure</th>
+                            <th>Next Maintenance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tank in tanks_by_status.upcoming %}
+                        <tr class="table-warning">
+                            <td>{{ tank.Serial_Number }}</td>
+                            <td>{{ tank.Manufacturer }}</td>
+                            <td>{{ tank.Gas_Type }}</td>
+                            <td>{{ tank.Hydro_Date_Formatted }}</td>
+                            <td>{{ tank.VIP_Date_Formatted }}</td>
+                            <td>{{ tank.Tank_Material }}</td>
+                            <td>{{ tank.Working_Pressure }} psi</td>
+                            <td>
+                                <strong>{{ tank.next_maintenance_type }}</strong> due<br>
+                                {{ tank.next_maintenance_date_Formatted }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('tank_detail', tank_id=tank.id) }}" class="btn btn-sm btn-info">Details</a>
+                                <a href="{{ url_for('item_detail', item_id=tank.inventory_id) }}" class="btn btn-sm btn-secondary">Inventory</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No tanks with upcoming maintenance</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Current Tanks -->
+        <div class="tab-pane fade" id="nav-current" role="tabpanel" aria-labelledby="nav-current-tab">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tank ID</th>
+                            <th>Manufacturer</th>
+                            <th>Gas Type</th>
+                            <th>Hydro Date</th>
+                            <th>VIP Date</th>
+                            <th>Tank Material</th>
+                            <th>Working Pressure</th>
+                            <th>Next Maintenance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tank in tanks_by_status.current %}
+                        <tr>
+                            <td>{{ tank.Serial_Number }}</td>
+                            <td>{{ tank.Manufacturer }}</td>
+                            <td>{{ tank.Gas_Type }}</td>
+                            <td>{{ tank.Hydro_Date_Formatted }}</td>
+                            <td>{{ tank.VIP_Date_Formatted }}</td>
+                            <td>{{ tank.Tank_Material }}</td>
+                            <td>{{ tank.Working_Pressure }} psi</td>
+                            <td>
+                                {% if tank.next_maintenance_type %}
+                                    <strong>{{ tank.next_maintenance_type }}</strong> due<br>
+                                    {{ tank.next_maintenance_date_Formatted }}
+                                {% else %}
+                                    No maintenance scheduled
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('tank_detail', tank_id=tank.id) }}" class="btn btn-sm btn-info">Details</a>
+                                <a href="{{ url_for('item_detail', item_id=tank.inventory_id) }}" class="btn btn-sm btn-secondary">Inventory</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No current tanks</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+
+{% block title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Reports Dashboard</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Monthly Reports</h3>
+                </div>
+                <div class="card-body">
+                    <p>Monthly activity reports show maintenance activities, equipment check-outs, check-ins, and summary statistics for a specific month.</p>
+                    
+                    <form action="{{ url_for('monthly_report', year=current_year, month=current_month) }}" method="get" class="mb-3">
+                        <div class="form-row">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="month">Month</label>
+                                    <select class="form-control" id="month" name="month">
+                                        <option value="1" {% if current_month == 1 %}selected{% endif %}>January</option>
+                                        <option value="2" {% if current_month == 2 %}selected{% endif %}>February</option>
+                                        <option value="3" {% if current_month == 3 %}selected{% endif %}>March</option>
+                                        <option value="4" {% if current_month == 4 %}selected{% endif %}>April</option>
+                                        <option value="5" {% if current_month == 5 %}selected{% endif %}>May</option>
+                                        <option value="6" {% if current_month == 6 %}selected{% endif %}>June</option>
+                                        <option value="7" {% if current_month == 7 %}selected{% endif %}>July</option>
+                                        <option value="8" {% if current_month == 8 %}selected{% endif %}>August</option>
+                                        <option value="9" {% if current_month == 9 %}selected{% endif %}>September</option>
+                                        <option value="10" {% if current_month == 10 %}selected{% endif %}>October</option>
+                                        <option value="11" {% if current_month == 11 %}selected{% endif %}>November</option>
+                                        <option value="12" {% if current_month == 12 %}selected{% endif %}>December</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="year">Year</label>
+                                    <select class="form-control" id="year" name="year">
+                                        {% for y in range(current_year-5, current_year+1) %}
+                                            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary btn-block">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="list-group">
+                        <a href="{{ url_for('monthly_report', year=current_year, month=current_month) }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-alt mr-2"></i> Current Month Report
+                        </a>
+                        {% for month in range(1, 13) %}
+                            <a href="{{ url_for('monthly_report', year=current_year, month=month) }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-alt mr-2"></i> {{ ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][month-1] }} {{ current_year }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Annual Reports</h3>
+                </div>
+                <div class="card-body">
+                    <p>Annual maintenance reports show maintenance records organized by month with yearly statistics on all maintenance activities.</p>
+                    
+                    <form action="{{ url_for('yearly_report', year=current_year) }}" method="get" class="mb-3">
+                        <div class="form-row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="year_only">Year</label>
+                                    <select class="form-control" id="year_only" name="year">
+                                        {% for y in range(current_year-5, current_year+1) %}
+                                            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-success btn-block">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="list-group">
+                        <a href="{{ url_for('yearly_report', year=current_year) }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chart-line mr-2"></i> Current Year Report
+                        </a>
+                        {% for y in range(current_year-5, current_year) %}
+                            <a href="{{ url_for('yearly_report', year=y) }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-alt mr-2"></i> {{ y }} Annual Report
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Other Reports</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('checkout_history') }}" class="btn btn-lg btn-block btn-outline-primary mb-3">
+                                <i class="fas fa-clipboard-list fa-2x mb-2"></i><br>
+                                Checkout History
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('maintenance') }}" class="btn btn-lg btn-block btn-outline-warning mb-3">
+                                <i class="fas fa-tools fa-2x mb-2"></i><br>
+                                Maintenance Records
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

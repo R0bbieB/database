@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}BCD Maintenance History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="mb-4">
+        <a href="{{ url_for('maintenance') }}" class="btn btn-secondary">&larr; Back to Maintenance</a>
+        <h1 class="mt-3">BCD Maintenance History</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">BCD Information</h3>
+                </div>
+                <div class="card-body">
+                    <h4>{{ item.manufacturer }} {{ item.model }}</h4>
+                    <p class="lead">Serial: {{ item.serial_number }}</p>
+
+                    <dl class="row">
+                        <dt class="col-sm-5">Type:</dt>
+                        <dd class="col-sm-7">BCD</dd>
+
+                        <dt class="col-sm-5">Intake Date:</dt>
+                        <dd class="col-sm-7">{{ item.intake_date.strftime('%m/%d/%Y') if item.intake_date else 'Unknown' }}</dd>
+
+                        <dt class="col-sm-5">Condition:</dt>
+                        <dd class="col-sm-7">
+                            {% if item.condition_code == 1 %}
+                                <span class="badge badge-success">New</span>
+                            {% elif item.condition_code == 2 %}
+                                <span class="badge badge-success">Good</span>
+                            {% elif item.condition_code == 3 %}
+                                <span class="badge badge-warning">Fair</span>
+                            {% elif item.condition_code == 4 %}
+                                <span class="badge badge-danger">Poor</span>
+                            {% elif item.condition_code == 5 %}
+                                <span class="badge badge-danger">Unusable</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Unknown</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+
+                    <a href="{{ url_for('item_detail', item_id=item.id) }}" class="btn btn-info btn-block">View Full Item Details</a>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">Maintenance Status</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5>Last Service</h5>
+                            <p class="lead">{{ bcd.last_maintenance.strftime('%m/%d/%Y') if bcd.last_maintenance else 'Never' }}</p>
+                        </div>
+                        <div class="col-6">
+                            <h5>Next Due</h5>
+                            <p class="lead {% if bcd.is_maintenance_due() %}text-danger font-weight-bold{% endif %}">
+                                {{ bcd.next_maintenance.strftime('%m/%d/%Y') if bcd.next_maintenance else 'Not Scheduled' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <div class="badge {% if bcd.is_maintenance_due() %}badge-danger{% else %}badge-success{% endif %} p-2" style="font-size: 16px;">
+                            {% if bcd.is_maintenance_due() %}
+                                Maintenance Due
+                            {% else %}
+                                Maintenance Current
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Add Maintenance Record</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="form-group row">
+                            <label for="date" class="col-sm-3 col-form-label">Date:</label>
+                            <div class="col-sm-9">
+                                <input type="date" class="form-control" id="date" name="date" value="{{ today }}" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="type" class="col-sm-3 col-form-label">Type:</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="type" name="type" required>
+                                    <option value="Regular maintenance">Regular Maintenance</option>
+                                    <option value="Repair">Repair</option>
+                                    <option value="Inspection">Inspection</option>
+                                    <option value="Part replacement">Part Replacement</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="notes" class="col-sm-3 col-form-label">Notes:</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter details about the maintenance performed..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-9 offset-sm-3">
+                                <button type="submit" class="btn btn-success">Save Record</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="mb-0">Maintenance History</h3>
+                </div>
+                <div class="card-body">
+                    {% if maintenance_records %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in maintenance_records %}
+                                    <tr>
+                                        <td>{{ record.date.strftime('%m/%d/%Y') }}</td>
+                                        <td>{{ record.maintenance_type }}</td>
+                                        <td>{{ record.notes }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3">No maintenance records found for this BCD.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

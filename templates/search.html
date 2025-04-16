@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+
+{% block title %}Search Equipment{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Search Equipment</h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Search</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('search') }}">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search_term" placeholder="Search by serial number, manufacturer, or model..." value="{{ search_term }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if search_term %}
+    <h2 class="mb-3">Results</h2>
+
+    {% if results %}
+    <div class="row">
+        {% for item in results %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ item.type_name if item.type_name else "Unknown Type" }}</h5>
+                    <a href="{{ url_for('item_detail', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">Details</a>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Item # {{ item.id }}</h6>
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Manufacturer:</dt>
+                        <dd class="col-sm-8">{{ item.manufacturer }}</dd>
+
+                        <dt class="col-sm-4">Model:</dt>
+                        <dd class="col-sm-8">{{ item.model }}</dd>
+
+                        <dt class="col-sm-4">SN:</dt>
+                        <dd class="col-sm-8">{{ item.serial_number }}</dd>
+
+                        <dt class="col-sm-4">Location:</dt>
+                        <dd class="col-sm-8">{{ item.location_name if item.location_name else "Unknown" }}</dd>
+
+                        <dt class="col-sm-4">Intake:</dt>
+                        <dd class="col-sm-8">{{ item.intake_date.strftime('%m/%d/%Y') if item.intake_date else "Unknown" }}</dd>
+
+                        <dt class="col-sm-4">Condition:</dt>
+                        <dd class="col-sm-8">
+                            {% if item.condition_code == 1 %}
+                                <span class="badge badge-success">New</span>
+                            {% elif item.condition_code == 2 %}
+                                <span class="badge badge-success">Good</span>
+                            {% elif item.condition_code == 3 %}
+                                <span class="badge badge-warning">Fair</span>
+                            {% elif item.condition_code == 4 %}
+                                <span class="badge badge-danger">Poor</span>
+                            {% elif item.condition_code == 5 %}
+                                <span class="badge badge-danger">Unusable</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Unknown</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Maintenance:</dt>
+                        <dd class="col-sm-8">
+                            {% if item.pm_required %}
+                                <span class="badge badge-info">Required</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Not Required</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+                <div class="card-footer">
+                    {% if item.currently_checked_out %}
+                        <span class="badge badge-warning">Currently Checked Out</span>
+                        <a href="{{ url_for('checkin_item', item_id=item.id) }}" class="btn btn-sm btn-success float-right">Check In</a>
+                    {% else %}
+                        <span class="badge badge-success">Available</span>
+                        <a href="{{ url_for('checkout_item', item_id=item.id) }}" class="btn btn-sm btn-warning float-right">Check Out</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No items found matching "{{ search_term }}". Please try another search term.
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

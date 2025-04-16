@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+
+{% block title %}Checkout History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Checkout History</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Checkout Records</h3>
+        </div>
+        <div class="card-body">
+            {% if checkouts %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Borrower</th>
+                                <th>Checkout Date</th>
+                                <th>Return Date</th>
+                                <th>Duration</th>
+                                <th>Checkout Condition</th>
+                                <th>Return Condition</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checkout in checkouts %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('item_detail', item_id=checkout.inventory_item_id) }}">
+                                        {% if checkout.item %}
+                                            {{ checkout.item.manufacturer }} {{ checkout.item.model }}
+                                        {% else %}
+                                            Item #{{ checkout.inventory_item_id }}
+                                        {% endif %}
+                                    </a>
+                                </td>
+                                <td>{{ checkout.person_name }}</td>
+                                <td>{{ checkout.checkout_date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if checkout.checkin_date %}
+                                        {{ checkout.checkin_date.strftime('%m/%d/%Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if checkout.checkin_date %}
+                                        {{ (checkout.checkin_date - checkout.checkout_date).days }} days
+                                    {% else %}
+                                        {{ (now - checkout.checkout_date).days }} days (ongoing)
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if checkout.checkout_condition == 1 %}1 (New)
+                                    {% elif checkout.checkout_condition == 2 %}2 (Good)
+                                    {% elif checkout.checkout_condition == 3 %}3 (Fair)
+                                    {% elif checkout.checkout_condition == 4 %}4 (Poor)
+                                    {% elif checkout.checkout_condition == 5 %}5 (Unusable)
+                                    {% else %}Unknown
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if checkout.checkin_condition %}
+                                        {% if checkout.checkin_condition == 1 %}1 (New)
+                                        {% elif checkout.checkin_condition == 2 %}2 (Good)
+                                        {% elif checkout.checkin_condition == 3 %}3 (Fair)
+                                        {% elif checkout.checkin_condition == 4 %}4 (Poor)
+                                        {% elif checkout.checkin_condition == 5 %}5 (Unusable)
+                                        {% else %}Unknown
+                                        {% endif %}
+                                        
+                                        {% if checkout.checkin_condition > checkout.checkout_condition %}
+                                            <span class="badge badge-danger">Condition Worsened</span>
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ checkout.notes }}</td>
+                                <td>
+                                    {% if checkout.checkin_date %}
+                                        <span class="badge badge-success">Returned</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Checked Out</span>
+                                        <a href="{{ url_for('checkin_item', item_id=checkout.inventory_item_id) }}" class="btn btn-sm btn-success">Check In</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <h4>Summary Statistics</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Checkouts</h5>
+                                    <p class="card-text display-4">{{ checkouts|length }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Currently Out</h5>
+                                    <p class="card-text display-4">{{ checkouts|selectattr('checkin_date', 'none')|list|length }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Average Duration</h5>
+                                    <p class="card-text display-4">
+                                        {% set completed_checkouts = checkouts|selectattr('checkin_date', 'defined')|list %}
+                                        {% if completed_checkouts %}
+                                            {% set total_days = 0 %}
+                                            {% for checkout in completed_checkouts %}
+                                                {% set total_days = total_days + (checkout.checkin_date - checkout.checkout_date).days %}
+                                            {% endfor %}
+                                            {{ (total_days / completed_checkouts|length)|round|int }} days
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No checkout history available.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('inventory_list') }}" class="btn btn-primary">Back to Inventory</a>
+    <button onclick="window.print()" class="btn btn-secondary">Print History</button>
+</div>
+{% endblock %}

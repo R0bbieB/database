@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<div class="grid">
+    <div class="card" style="text-align:center">
+        <h3>Total Equipment</h3>
+        <p style="font-size:2rem; font-weight:bold; color:#2c6fad">{{ total_items }}</p>
+    </div>
+
+    <div class="card" style="text-align:center">
+        <h3>Maintenance Due</h3>
+        <p style="font-size:2rem; font-weight:bold; color:{% if total_maintenance_due > 0 %}#ff3b30{% else %}#2c6fad{% endif %}">
+            {{ total_maintenance_due }}
+        </p>
+        {% if total_maintenance_due > 0 %}
+            <div class="maintenance-breakdown">
+                {% if bcd_maintenance_due > 0 %}
+                    <a href="/maintenance" class="maintenance-link">
+                        <span class="count">{{ bcd_maintenance_due }}</span>
+                        <span class="type">BCDs</span>
+                    </a>
+                {% endif %}
+
+                {% if tank_maintenance_due > 0 %}
+                    <a href="/tanks" class="maintenance-link">
+                        <span class="count">{{ tank_maintenance_due }}</span>
+                        <span class="type">Tanks</span>
+                    </a>
+                {% endif %}
+
+                {% if regulator_maintenance_due > 0 %}
+                    <a href="/maintenance?type=regulator" class="maintenance-link">
+                        <span class="count">{{ regulator_maintenance_due }}</span>
+                        <span class="type">Regulators</span>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if upcoming_maintenance %}
+<div class="card">
+    <h3>Upcoming Maintenance (Next 30 Days)</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Maintenance Type</th>
+                    <th>Due Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in upcoming_maintenance %}
+                <tr>
+                    <td>{{ item.manufacturer }} {{ item.model }}</td>
+                    <td>{{ item.type_name }}</td>
+                    <td>{{ item.maintenance_type }}</td>
+                    <td>{{ item.due_date }}</td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-warning"
+                           onclick="showMaintenanceModal('{{ item.type_id }}', '{{ item.id }}')">
+                            Record Maintenance
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Quick Actions</h3>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px">
+        <a href="/inventory" class="btn">View All Equipment</a>
+        <a href="/add" class="btn">Add New Equipment</a>
+        <a href="/search" class="btn btn-secondary">Search Inventory</a>
+        <a href="/tanks" class="btn btn-secondary">Tank Maintenance</a>
+        <a href="/maintenance" class="btn btn-secondary">BCD Maintenance</a>
+    </div>
+</div>
+
+<style>
+    .maintenance-breakdown {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    .maintenance-link {
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        padding: 8px 12px;
+        background: rgba(255, 59, 48, 0.1);
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .maintenance-link:hover {
+        background: rgba(255, 59, 48, 0.2);
+    }
+    .maintenance-link .count {
+        font-weight: bold;
+        color: #ff3b30;
+    }
+    .maintenance-link .type {
+        font-size: 14px;
+        color: #666;
+    }
+</style>
+
+{% block extra_js %}
+<script>
+    function showMaintenanceModal(typeId, itemId) {
+        // Determine item type based on type_id
+        let itemType = 'other';
+        if (typeId == 1) {
+            itemType = 'bcd';
+        } else if (typeId == 2) {
+            itemType = 'regulator';
+        } else if (typeId == 7) {
+            itemType = 'tank';
+        }
+
+        // Set the form fields
+        document.getElementById('item_type').value = itemType;
+
+        // Update equipment lists
+        updateEquipmentList();
+
+        // Set the correct selection
+        if (itemType === 'bcd') {
+            document.getElementById('bcd_selection').value = itemId;
+        } else if (itemType === 'tank') {
+            document.getElementById('tank_selection').value = itemId;
+        } else if (itemType === 'regulator') {
+            document.getElementById('regulator_selection').value = itemId;
+        } else if (itemType === 'other') {
+            document.getElementById('other_selection').value = itemId;
+        }
+
+        // Show the modal
+        $('#maintenanceModal').modal('show');
+    }
+</script>
+{% endblock %}
+{% endblock %}

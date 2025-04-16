@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="margin-bottom:20px">
+    <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">&larr; Back to Inventory</a>
+    <h2 style="margin-top:15px">Item Details</h2>
+</div>
+
+<div class="card">
+    <h3>{{ item.manufacturer }} {{ item.model }}</h3>
+    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #ddd; padding-bottom:10px; margin-bottom:15px">
+        <span>Type: {{ type_name }}</span>
+        <span class="badge" style="background:#eee">SN: {{ item.serial_number }}</span>
+    </div>
+    
+    <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+        <div>Location: {{ location_name }}</div>
+        <div>Intake Date: {{ item.intake_date.strftime('%m/%d/%Y') if item.intake_date else 'Unknown' }}</div>
+        <div>Condition: {{ item.condition_code }}
+            {% if item.condition_code <= 2 %} (Good)
+            {% elif item.condition_code == 3 %} (Fair)
+            {% else %} (Poor)
+            {% endif %}
+        </div>
+        <div>Maintenance: {{ 'Required' if item.pm_required else 'Not Required' }}</div>
+        
+        {% if item.currently_checked_out %}
+            <div style="grid-column: span 2; margin-top:10px; background:#fff3cd; color:#856404; padding:10px; border-radius:4px;">
+                <strong>Currently Checked Out</strong>
+                {% if item.last_check_out_date %}
+                    ({{ item.last_check_out_date.strftime('%m/%d/%Y') }})
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    {% if mask_data %}
+        <!-- Mask specific data -->
+        <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+            <h4>Mask Details</h4>
+            <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div>Size: {{ mask_data.size or 'Not specified' }}</div>
+                <div>
+                    Communication Device: 
+                    {% if mask_data.has_comms %}
+                        <span style="color:green">Yes</span>
+                    {% else %}
+                        <span style="color:#999">No</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    {% if regulator_data %}
+        <!-- Regulator specific data -->
+        <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+            <h4>Regulator Details</h4>
+            <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div>
+                    Working Computer: 
+                    {% if regulator_data.has_computer %}
+                        <span style="color:green">Yes</span>
+                    {% else %}
+                        <span style="color:#999">No</span>
+                    {% endif %}
+                </div>
+                <div>Last Service: {{ regulator_data.last_service_date.strftime('%m/%d/%Y') if regulator_data.last_service_date else 'Unknown' }}</div>
+                <div>Next Service:
+                    {% if regulator_data.last_service_date %}
+                        {{ regulator_data.last_service_date.replace(year=regulator_data.last_service_date.year + 1).strftime('%m/%d/%Y') }}
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="margin-top:10px">
+                <button class="btn btn-warning" onclick="showMaintenanceModal('regulator', '{{ regulator_data.id }}')">
+                    <i class="fas fa-wrench"></i> Record Maintenance
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if bcd_data %}
+        <!-- BCD specific data -->
+        <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+            <h4>BCD Maintenance</h4>
+            <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div>Last Maintenance: {{ bcd_data.last_maintenance.strftime('%m/%d/%Y') if bcd_data.last_maintenance else 'Unknown' }}</div>
+                <div>Next Maintenance:
+                    {% if bcd_data.next_maintenance %}
+                        <span style="color:{% if bcd_data.is_maintenance_due() %}red{% else %}inherit{% endif %}">
+                            {{ bcd_data.next_maintenance.strftime('%m/%d/%Y') }}
+                        </span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if maintenance_records %}
+                <h5 style="margin-top:15px">Recent Maintenance</h5>
+                <table style="width:100%; margin-top:10px;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in maintenance_records[:3] %}
+                            <tr>
+                                <td>{{ record.date.strftime('%m/%d/%Y') }}</td>
+                                <td>{{ record.maintenance_type }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="margin-top:10px">
+                    <a href="{{ url_for('maintenance_detail', bcd_id=bcd_data.id) }}" class="btn btn-small">View All Maintenance</a>
+                </div>
+            {% else %}
+                <p style="margin-top:10px">No maintenance records found</p>
+            {% endif %}
+
+            <div style="margin-top:10px">
+                <button class="btn btn-warning" onclick="showMaintenanceModal('bcd', '{{ bcd_data.id }}')">
+                    <i class="fas fa-wrench"></i> Record Maintenance
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if tank_data %}
+        <!-- Tank specific data -->
+        <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+            <h4>Tank Details</h4>
+            <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div>Tank Number: {{ tank_data.tank_number or 'Not specified' }}</div>
+                <div>Gas Type: {{ tank_data.gas_type or 'Air' }}</div>
+                <div>Material: {{ tank_data.tank_material or 'Aluminum' }}</div>
+                <div>Working Pressure: {{ tank_data.working_pressure or '3000' }} PSI</div>
+                <div>Hydro Test: {{ tank_data.hydro_date.strftime('%m/%d/%Y') if tank_data.hydro_date else 'Not recorded' }}</div>
+                <div>VIP Inspection: {{ tank_data.vip_date.strftime('%m/%d/%Y') if tank_data.vip_date else 'Not recorded' }}</div>
+                <div>Next Hydro Test: {{ tank_data.get_next_hydro_date().strftime('%m/%d/%Y') if tank_data.hydro_date else 'Not recorded' }}</div>
+                <div>Next VIP: {{ tank_data.get_next_vip_date().strftime('%m/%d/%Y') if tank_data.vip_date else 'Not recorded' }}</div>
+            </div>
+
+            <div style="margin-top:10px; display: flex; gap: 10px;">
+                <a href="{{ url_for('tank_detail', tank_id=tank_data.id) }}" class="btn btn-small">View Tank Details</a>
+                <button class="btn btn-warning" onclick="showMaintenanceModal('tank', '{{ tank_data.id }}')">
+                    <i class="fas fa-wrench"></i> Record Maintenance
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+        <h4>Checkout History</h4>
+
+        {% if checkouts %}
+            <table style="width:100%; margin-top:10px;">
+                <thead>
+                    <tr>
+                        <th>Person</th>
+                        <th>Checkout Date</th>
+                        <th>Return Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for checkout in checkouts %}
+                        <tr>
+                            <td>{{ checkout.person_name }}</td>
+                            <td>{{ checkout.checkout_date.strftime('%m/%d/%Y') }}</td>
+                            <td>{{ checkout.checkin_date.strftime('%m/%d/%Y') if checkout.checkin_date else 'Not returned' }}</td>
+                            <td>
+                                {% if checkout.checkin_date %}
+                                    <span style="color:green">Returned</span>
+                                {% else %}
+                                    <span style="color:orange">Checked Out</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No checkout history available.</p>
+        {% endif %}
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end">
+        {% if item.currently_checked_out %}
+            <a href="{{ url_for('checkin_item', item_id=item.id) }}" class="btn">Check In</a>
+        {% else %}
+            <a href="{{ url_for('checkout_item', item_id=item.id) }}" class="btn">Check Out</a>
+        {% endif %}
+
+        {% if not bcd_data and not tank_data and not regulator_data %}
+            <button class="btn btn-warning" onclick="showMaintenanceModal('other', '{{ item.id }}')">
+                <i class="fas fa-wrench"></i> Record Maintenance
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function showMaintenanceModal(itemType, itemId) {
+        // Set the form fields
+        document.getElementById('item_type').value = itemType;
+
+        // Update equipment lists
+        updateEquipmentList();
+
+        // Set the correct selection
+        if (itemType === 'bcd') {
+            document.getElementById('bcd_selection').value = itemId;
+        } else if (itemType === 'tank') {
+            document.getElementById('tank_selection').value = itemId;
+        } else if (itemType === 'regulator') {
+            document.getElementById('regulator_selection').value = itemId;
+        } else if (itemType === 'other') {
+            document.getElementById('other_selection').value = itemId;
+        }
+
+        // Show the modal
+        $('#maintenanceModal').modal('show');
+    }
+</script>
+{% endblock %}
+{% endblock %}

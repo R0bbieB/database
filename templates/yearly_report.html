@@ -1,0 +1,274 @@
+{% extends "layout.html" %}
+
+{% block title %}Yearly Maintenance Report - {{ year }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none;
+        }
+
+        @page {
+            size: portrait;
+            margin: 1cm;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+    }
+
+    .chart-container {
+        height: 300px;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Annual Maintenance Report - {{ year }}</h1>
+        <div class="no-print">
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <a href="{{ url_for('reports') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Annual Maintenance Summary</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Maintenance Activities</h5>
+                            <p class="display-4">{{ total_maintenance }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Maintenance by Type</h5>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Maintenance Type</th>
+                                        <th class="text-right">Count</th>
+                                        <th class="text-right">Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for maint_type, count in maintenance_by_type.items() %}
+                                    <tr>
+                                        <td>{{ maint_type }}</td>
+                                        <td class="text-right">{{ count }}</td>
+                                        <td class="text-right">{{ ((count / total_maintenance) * 100) | round(1) }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="maintenanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0">Monthly Breakdown</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th class="text-center">Maintenance Performed</th>
+                            <th class="text-center">BCDs Due</th>
+                            <th class="text-center">Tanks Due</th>
+                            <th class="text-center">Total Due</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stats in monthly_stats %}
+                        <tr>
+                            <td>{{ stats.month_name }}</td>
+                            <td class="text-center">{{ stats.maintenance_count }}</td>
+                            <td class="text-center">{{ stats.bcd_maintenance_due }}</td>
+                            <td class="text-center">{{ stats.tank_maintenance_due }}</td>
+                            <td class="text-center">{{ stats.total_maintenance_due }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-container mt-4">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    {% for month_num, records in maintenance_by_month.items() %}
+    {% if records %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="mb-0">{{ monthly_stats[month_num-1].month_name }} Maintenance Records</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Type</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.date.strftime('%m/%d/%Y') }}</td>
+                            <td>
+                                {% if record.item %}
+                                    {{ record.item.manufacturer }} {{ record.item.model }}
+                                    ({{ record.item.serial_number }})
+                                {% else %}
+                                    Unknown Item
+                                {% endif %}
+                            </td>
+                            <td>{{ record.maintenance_type }}</td>
+                            <td>{{ record.notes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if loop.index % 2 == 0 %}
+    <div class="page-break"></div>
+    {% endif %}
+
+    {% endif %}
+    {% endfor %}
+
+    <footer class="text-center mt-4 mb-5">
+        <p>Report generated on {{ now.strftime('%m/%d/%Y') }}</p>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up maintenance by type chart
+        const typeCtx = document.getElementById('maintenanceChart').getContext('2d');
+        const typeLabels = [{% for type, count in maintenance_by_type.items() %}'{{ type }}',{% endfor %}];
+        const typeCounts = [{% for type, count in maintenance_by_type.items() %}{{ count }},{% endfor %}];
+
+        new Chart(typeCtx, {
+            type: 'pie',
+            data: {
+                labels: typeLabels,
+                datasets: [{
+                    data: typeCounts,
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                        '#858796', '#5a5c69', '#76a55e', '#e83e8c', '#6f42c1'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Maintenance by Type'
+                    }
+                }
+            }
+        });
+
+        // Set up monthly chart
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthLabels = [{% for stats in monthly_stats %}'{{ stats.month_name }}',{% endfor %}];
+        const maintenanceCounts = [{% for stats in monthly_stats %}{{ stats.maintenance_count }},{% endfor %}];
+        const bcdDueCounts = [{% for stats in monthly_stats %}{{ stats.bcd_maintenance_due }},{% endfor %}];
+        const tankDueCounts = [{% for stats in monthly_stats %}{{ stats.tank_maintenance_due }},{% endfor %}];
+
+        new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Maintenance Performed',
+                        data: maintenanceCounts,
+                        backgroundColor: '#4e73df'
+                    },
+                    {
+                        label: 'BCDs Due',
+                        data: bcdDueCounts,
+                        backgroundColor: '#1cc88a'
+                    },
+                    {
+                        label: 'Tanks Due',
+                        data: tankDueCounts,
+                        backgroundColor: '#f6c23e'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: false
+                    },
+                    y: {
+                        stacked: false,
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Maintenance Activity'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

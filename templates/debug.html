@@ -1,0 +1,119 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Debug Info</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        h1 { color: #2c6fad; }
+        .debug-section { margin-bottom: 30px; background: #f5f5f5; padding: 15px; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #eee; padding: 10px; overflow: auto; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>API Debug Information</h1>
+
+    <div class="debug-section">
+        <h2>All Items</h2>
+        <p>Status: <span class="{{ 'success' if debug_info.get('items_status') == 200 else 'error' }}">
+            {{ debug_info.get('items_status', 'Unknown') }}
+        </span></p>
+        <p>Count: {{ debug_info.get('items_count', 0) }}</p>
+
+        {% if debug_info.get('items_error') %}
+            <p class="error">Error: {{ debug_info.get('items_error') }}</p>
+        {% endif %}
+
+        {% if debug_info.get('items_sample') %}
+            <h3>Sample Items (first 5):</h3>
+            <pre>{{ debug_info.get('items_sample')|tojson(indent=2) }}</pre>
+        {% endif %}
+    </div>
+
+    <div class="debug-section">
+        <h2>Item Types</h2>
+        <p>Status: <span class="{{ 'success' if debug_info.get('types_status') == 200 else 'error' }}">
+            {{ debug_info.get('types_status', 'Unknown') }}
+        </span></p>
+        <p>Count: {{ debug_info.get('types_count', 0) }}</p>
+
+        {% if debug_info.get('types_error') %}
+            <p class="error">Error: {{ debug_info.get('types_error') }}</p>
+        {% endif %}
+
+        {% if debug_info.get('types_data') %}
+            <h3>Item Types:</h3>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Type</th>
+                </tr>
+                {% for type in debug_info.get('types_data') %}
+                <tr>
+                    <td>{{ type.ID }}</td>
+                    <td>{{ type['Item Type'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="debug-section">
+        <h2>BCDs</h2>
+        <p>Count: {{ debug_info.get('bcds_count', 0) }}</p>
+
+        {% if debug_info.get('bcds_sample') %}
+            <h3>Sample BCDs (first 3):</h3>
+            <pre>{{ debug_info.get('bcds_sample')|tojson(indent=2) }}</pre>
+        {% endif %}
+    </div>
+
+    <div class="debug-section">
+        <h2>Locations</h2>
+        <p>Status: <span class="{{ 'success' if debug_info.get('locations_status') == 200 else 'error' }}">
+            {{ debug_info.get('locations_status', 'Unknown') }}
+        </span></p>
+        <p>Count: {{ debug_info.get('locations_count', 0) }}</p>
+
+        {% if debug_info.get('locations_error') %}
+            <p class="error">Error: {{ debug_info.get('locations_error') }}</p>
+        {% endif %}
+
+        {% if debug_info.get('locations_data') %}
+            <h3>Locations:</h3>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Location</th>
+                </tr>
+                {% for loc in debug_info.get('locations_data') %}
+                <tr>
+                    <td>{{ loc.ID }}</td>
+                    <td>{{ loc.Location }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="debug-section">
+        <h2>Maintenance Due</h2>
+        <p>Status: <span class="{{ 'success' if debug_info.get('maintenance_status') == 200 else 'error' }}">
+            {{ debug_info.get('maintenance_status', 'Unknown') }}
+        </span></p>
+        <p>Count: {{ debug_info.get('maintenance_count', 0) }}</p>
+
+        {% if debug_info.get('maintenance_error') %}
+            <p class="error">Error: {{ debug_info.get('maintenance_error') }}</p>
+        {% endif %}
+    </div>
+
+    <a href="/" style="display: inline-block; padding: 10px 15px; background: #2c6fad; color: white; text-decoration: none; border-radius: 4px;">Back to Home</a>
+</body>
+</html>

@@ -1,0 +1,300 @@
+{% extends "layout.html" %}
+
+{% block title %}Monthly Report - {{ month_name }} {{ year }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none;
+        }
+
+        @page {
+            size: portrait;
+            margin: 1cm;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Monthly Activity Report</h1>
+        <div class="no-print">
+            <button onclick="window.print()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <a href="{{ url_for('reports') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{{ month_name }} {{ year }} Summary</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Maintenance Records</h5>
+                            <p class="display-4">{{ maintenance_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Equipment Check-outs</h5>
+                            <p class="display-4">{{ checkouts_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Equipment Check-ins</h5>
+                            <p class="display-4">{{ checkins_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Activities</h5>
+                            <p class="display-4">{{ total_activities }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0">Maintenance Activities</h3>
+        </div>
+        <div class="card-body">
+            {% if maintenance_records %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in maintenance_records %}
+                            <tr>
+                                <td>{{ record.date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if record.item %}
+                                        {{ record.item.manufacturer }} {{ record.item.model }}
+                                        ({{ record.item.serial_number }})
+                                    {% else %}
+                                        Unknown Item
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.maintenance_type }}</td>
+                                <td>{{ record.notes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No maintenance records for this month.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h3 class="mb-0">Equipment Check-outs</h3>
+        </div>
+        <div class="card-body">
+            {% if checkouts %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th>Borrower</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checkout in checkouts %}
+                            <tr>
+                                <td>{{ checkout.checkout_date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if checkout.item %}
+                                        {{ checkout.item.manufacturer }} {{ checkout.item.model }}
+                                    {% else %}
+                                        Unknown Item
+                                    {% endif %}
+                                </td>
+                                <td>{{ checkout.type_name }}</td>
+                                <td>{{ checkout.person_name }}</td>
+                                <td>
+                                    {% if checkout.checkin_date %}
+                                        <span class="badge badge-success">Returned</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Still Out</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No check-outs for this month.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Equipment Check-ins</h3>
+        </div>
+        <div class="card-body">
+            {% if checkins %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th>Borrower</th>
+                                <th>Condition Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checkin in checkins %}
+                            <tr>
+                                <td>{{ checkin.checkin_date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if checkin.item %}
+                                        {{ checkin.item.manufacturer }} {{ checkin.item.model }}
+                                    {% else %}
+                                        Unknown Item
+                                    {% endif %}
+                                </td>
+                                <td>{{ checkin.type_name }}</td>
+                                <td>{{ checkin.person_name }}</td>
+                                <td>
+                                    {% if checkin.checkin_condition and checkin.checkout_condition %}
+                                        {% if checkin.checkin_condition > checkin.checkout_condition %}
+                                            <span class="badge badge-danger">Condition Worsened</span>
+                                        {% elif checkin.checkin_condition < checkin.checkout_condition %}
+                                            <span class="badge badge-success">Condition Improved</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No Change</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge badge-secondary">Unknown</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No check-ins for this month.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h3 class="mb-0">Equipment Condition Changes</h3>
+        </div>
+        <div class="card-body">
+            {% set condition_changes = [] %}
+            {% for checkin in checkins if checkin.checkin_condition and checkin.checkout_condition and checkin.checkin_condition != checkin.checkout_condition %}
+                {% set _ = condition_changes.append(checkin) %}
+            {% endfor %}
+
+            {% if condition_changes %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Borrower</th>
+                                <th>Previous Condition</th>
+                                <th>New Condition</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checkin in condition_changes %}
+                            <tr>
+                                <td>{{ checkin.checkin_date.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    {% if checkin.item %}
+                                        {{ checkin.item.manufacturer }} {{ checkin.item.model }}
+                                    {% else %}
+                                        Unknown Item
+                                    {% endif %}
+                                </td>
+                                <td>{{ checkin.person_name }}</td>
+                                <td>
+                                    {% if checkin.checkout_condition == 1 %}1 (New)
+                                    {% elif checkin.checkout_condition == 2 %}2 (Good)
+                                    {% elif checkin.checkout_condition == 3 %}3 (Fair)
+                                    {% elif checkin.checkout_condition == 4 %}4 (Poor)
+                                    {% elif checkin.checkout_condition == 5 %}5 (Unusable)
+                                    {% else %}Unknown
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if checkin.checkin_condition == 1 %}1 (New)
+                                    {% elif checkin.checkin_condition == 2 %}2 (Good)
+                                    {% elif checkin.checkin_condition == 3 %}3 (Fair)
+                                    {% elif checkin.checkin_condition == 4 %}4 (Poor)
+                                    {% elif checkin.checkin_condition == 5 %}5 (Unusable)
+                                    {% else %}Unknown
+                                    {% endif %}
+                                </td>
+                                <td>{{ checkin.notes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No condition changes recorded this month.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="text-center mt-4 mb-5">
+        <p>Report generated on {{ now.strftime('%m/%d/%Y') }}</p>
+    </footer>
+</div>
+{% endblock %}

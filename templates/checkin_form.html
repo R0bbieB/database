@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="margin-bottom:20px">
+    <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">&larr; Back to Inventory</a>
+    <h2 style="margin-top:15px">Check-in Equipment</h2>
+</div>
+
+<div class="card">
+    <h3>{{ item.manufacturer }} {{ item.model }}</h3>
+    <p>Serial: {{ item.serial_number }}</p>
+    
+    {% if checkout %}
+        <div style="background:#f7f7f7; padding:10px; border-radius:4px; margin:10px 0">
+            <p>Checked out by: <strong>{{ checkout.person_name }}</strong></p>
+            <p>Date: {{ checkout.checkout_date.strftime('%m/%d/%Y') }}</p>
+            {% if checkout.notes %}
+                <p>Notes: {{ checkout.notes }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <form method="POST">
+        <div class="form-row">
+            <label for="condition_code">Current Condition:</label>
+            <select id="condition_code" name="condition_code" required>
+                <option value="1">1 - New</option>
+                <option value="2">2 - Good</option>
+                <option value="3">3 - Fair</option>
+                <option value="4">4 - Poor</option>
+                <option value="5">5 - Unusable</option>
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <label for="notes">Notes:</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Describe the condition, any issues, or damage"></textarea>
+        </div>
+        
+        <div style="margin-top:20px">
+            <button type="submit" class="btn">Check In</button>
+            <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Set default selection based on previous condition
+    document.addEventListener('DOMContentLoaded', function() {
+        const conditionSelect = document.getElementById('condition_code');
+        conditionSelect.value = '{{ item.condition_code }}';
+    });
+</script>
+{% endblock %}

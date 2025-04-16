@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+
+{% block title %}Add New Item{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Add New Equipment</h1>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Item Information</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group">
+                    <label for="item_type">Equipment Type</label>
+                    <select class="form-control" id="item_type" name="item_type" required onchange="showSpecificFields()">
+                        <option value="">Select Item Type</option>
+                        {% for type in item_types %}
+                            <option value="{{ type.id }}">{{ type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="manufacturer">Manufacturer</label>
+                    <input type="text" class="form-control" id="manufacturer" name="manufacturer" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" class="form-control" id="model" name="model" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="serial">Serial Number</label>
+                    <input type="text" class="form-control" id="serial" name="serial" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="intake_date">Intake Date</label>
+                    <input type="date" class="form-control" id="intake_date" name="intake_date" value="{{ today }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Storage Location</label>
+                    <select class="form-control" id="location" name="location" required>
+                        {% for location in locations %}
+                            <option value="{{ location.id }}">{{ location.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="pm_required" name="pm_required" checked>
+                        <label class="form-check-label" for="pm_required">
+                            Preventative Maintenance Required
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="condition">Condition</label>
+                    <select class="form-control" id="condition" name="condition" required>
+                        <option value="1">1 - New</option>
+                        <option value="2" selected>2 - Good</option>
+                        <option value="3">3 - Fair</option>
+                        <option value="4">4 - Poor</option>
+                        <option value="5">5 - Unusable</option>
+                    </select>
+                </div>
+
+                <!-- Regulator-specific fields (hidden by default) -->
+                <div id="regulator_fields" style="display: none;">
+                    <h4 class="mt-4 mb-3">Regulator Information</h4>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="has_computer" name="has_computer">
+                            <label class="form-check-label" for="has_computer">
+                                Has Working Computer
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mask-specific fields (hidden by default) -->
+                <div id="mask_fields" style="display: none;">
+                    <h4 class="mt-4 mb-3">Mask Information</h4>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="has_comms" name="has_comms">
+                            <label class="form-check-label" for="has_comms">
+                                Has Communication Device
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="size">Size</label>
+                        <select class="form-control" id="size" name="size">
+                            <option value="">Select Size</option>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tank-specific fields (hidden by default) -->
+                <div id="tank_fields" style="display: none;">
+                    <h4 class="mt-4 mb-3">Tank Information</h4>
+                    <div class="form-group">
+                        <label for="tank_number">Tank Number</label>
+                        <input type="text" class="form-control" id="tank_number" name="tank_number">
+                    </div>
+                    <div class="form-group">
+                        <label for="hydro_date">Hydro Date</label>
+                        <input type="date" class="form-control" id="hydro_date" name="hydro_date">
+                    </div>
+                    <div class="form-group">
+                        <label for="vip_date">VIP Date</label>
+                        <input type="date" class="form-control" id="vip_date" name="vip_date">
+                    </div>
+                    <div class="form-group">
+                        <label for="tank_material">Tank Material</label>
+                        <select class="form-control" id="tank_material" name="tank_material">
+                            <option value="Steel">Steel</option>
+                            <option value="Aluminum">Aluminum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="working_pressure">Working Pressure (PSI)</label>
+                        <input type="number" class="form-control" id="working_pressure" name="working_pressure" value="3000">
+                    </div>
+                    <div class="form-group">
+                        <label for="gas_type">Gas Type</label>
+                        <select class="form-control" id="gas_type" name="gas_type">
+                            <option value="Air" selected>Air</option>
+                            <option value="NITROX">NITROX</option>
+                            <option value="Oxygen">Oxygen</option>
+                            <option value="Trimix">Trimix</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                    <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function showSpecificFields() {
+        const itemType = document.getElementById('item_type').value;
+
+        // Hide all specific fields first
+        document.getElementById('regulator_fields').style.display = 'none';
+        document.getElementById('mask_fields').style.display = 'none';
+        document.getElementById('tank_fields').style.display = 'none';
+
+        // Show relevant fields based on item type
+        if (itemType == '2') { // Regulator
+            document.getElementById('regulator_fields').style.display = 'block';
+        } else if (itemType == '4') { // Mask
+            document.getElementById('mask_fields').style.display = 'block';
+        } else if (itemType == '7') { // Tank
+            document.getElementById('tank_fields').style.display = 'block';
+        }
+    }
+
+    // Call when page loads to set initial state
+    document.addEventListener('DOMContentLoaded', showSpecificFields);
+</script>
+{% endblock %}
+{% endblock %}

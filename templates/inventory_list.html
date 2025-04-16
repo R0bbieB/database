@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Inventory List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Inventory List</h1>
+    <p>Total Items: {{ total_items }}</p>
+
+    <div class="mb-3">
+        <form action="{{ url_for('search') }}" method="post" class="form-inline">
+            <div class="input-group">
+                <input type="text" name="search_term" class="form-control" placeholder="Search by serial, manufacturer, or model">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="accordion" id="inventoryAccordion">
+        {% for type_name, items in items_by_type.items() %}
+        <div class="card">
+            <div class="card-header" id="heading{{ loop.index }}">
+                <h2 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse{{ loop.index }}" aria-expanded="true" aria-controls="collapse{{ loop.index }}">
+                        {{ type_name }} ({{ items|length }})
+                    </button>
+                </h2>
+            </div>
+
+            <div id="collapse{{ loop.index }}" class="collapse" aria-labelledby="heading{{ loop.index }}" data-parent="#inventoryAccordion">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Manufacturer</th>
+                                    <th>Model</th>
+                                    <th>Serial</th>
+                                    <th>Location</th>
+                                    <th>Condition</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.manufacturer }}</td>
+                                    <td>{{ item.model }}</td>
+                                    <td>{{ item.serial_number }}</td>
+                                    <td>{{ item.location_name }}</td>
+                                    <td>
+                                        {% if item.condition_code <= 2 %} (Good)
+                                        {% elif item.condition_code == 3 %} (Fair)
+                                        {% elif item.condition_code == 4 %} (Poor)
+                                        {% elif item.condition_code == 5 %} (Unusable)
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.currently_checked_out %}
+                                            <span class="badge badge-warning">Checked Out</span>
+                                        {% else %}
+                                            <span class="badge badge-success">Available</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="btn btn-sm btn-info">Details</a>
+
+                                        {% if item.currently_checked_out %}
+                                            <a href="{{ url_for('checkin_item', item_id=item.id) }}" class="btn btn-sm btn-success">Check In</a>
+                                        {% else %}
+                                            <a href="{{ url_for('checkout_item', item_id=item.id) }}" class="btn btn-sm btn-warning">Check Out</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

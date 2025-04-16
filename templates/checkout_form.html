@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="margin-bottom:20px">
+    <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">&larr; Back to Inventory</a>
+    <h2 style="margin-top:15px">Checkout Equipment</h2>
+</div>
+
+<div class="card">
+    <h3>{{ item.manufacturer }} {{ item.model }}</h3>
+    <p>Serial: {{ item.serial_number }}</p>
+    <div style="display:flex; gap:20px; margin:10px 0">
+        <span>Type: {{ item.item_type.name }}</span>
+        <span>Condition: {{ item.condition_code }}
+            {% if item.condition_code <= 2 %} (Good)
+            {% elif item.condition_code == 3 %} (Fair)
+            {% else %} (Poor)
+            {% endif %}
+        </span>
+    </div>
+    
+    <form method="POST">
+        <div class="form-row">
+            <label for="person_name">Name of Person:</label>
+            <input type="text" id="person_name" name="person_name" required>
+        </div>
+        
+        <div class="form-row">
+            <label for="notes">Notes:</label>
+            <textarea id="notes" name="notes" rows="3"></textarea>
+        </div>
+        
+        <p>Current condition: {{ item.condition_code }}
+            {% if item.condition_code <= 2 %} (Good)
+            {% elif item.condition_code == 3 %} (Fair)
+            {% else %} (Poor)
+            {% endif %}
+        </p>
+        
+        <div style="margin-top:20px">
+            <button type="submit" class="btn">Check Out</button>
+            <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
